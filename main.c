@@ -404,6 +404,10 @@ int main(void)
 			if (win)
 			{
 				currentScreen = WIN;
+				if (bestTime < 0.0f || timer < bestTime)
+				{
+					bestTime = timer;
+				}
 				continue;
 			}
 		}
