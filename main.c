@@ -38,11 +38,9 @@ Rectangle level1walls[] = {
 
 // PROPRIETES DES MURS DE NIVEAU 2
 Rectangle level2walls[] = {
-	{50, 250, 10, 100},
-	{150, 200, 10, 100},
-	{600, 50, 10, 500},
-	{60, 100, 10, 250},
-	{150, 260, 10, 340}
+	{85, 0, 10, 550},
+	{145, 0, 10, 550},
+	{205, 50, 10, 550}
 };
 
 // PROPRIETES DES ENNEMIS DE NIVEAU 1
@@ -61,11 +59,11 @@ Enemy level2Enemies[] = {
 
 // PROPRIETES DU NIVEAU 1
 Level level1 = {
-	740.0f,
-	40.0f,
-	{100, 500, 55, 55},
-	{750, 550, 30, 9},
-	{175, 400, 75, 10},
+	740.0f,                     // PlayerStartX
+	40.0f,                      // PlayerStartY
+	{100, 500, 40, 40},         // exitRect
+	{750, 550, 30, 9},	    // keyRect
+	{175, 400, 75, 10},	    // doorRect
 	level1walls,
 	sizeof(level1walls) / sizeof(level1walls[0]),
 	level1Enemies,
@@ -74,11 +72,11 @@ Level level1 = {
 
 // PROPRIETES DU NIVEAU 2
 Level level2 = {
-	500.0f,
-	200.0f,
-	{600, 300, 55, 55},
-	{150, 250, 30, 9},
-	{35, 200, 75, 10},
+	40.0f,
+	30.0f,
+	{100, 30, 40, 40},
+	{700, 500, 30, 9},
+	{95, 70, 50, 10},
 	level2walls,
 	sizeof(level2walls) / sizeof(level2walls[0]),
 	level2Enemies,
@@ -263,7 +261,7 @@ int main(void)
 	// NIVEAU
 	Level levels[] = {level1, level2};
 	int levelCount = sizeof(levels) / sizeof(levels[0]);
-	int currentLevelIndex = 0;
+	int currentLevelIndex = 1;
 	Level *currentLevel = &levels[currentLevelIndex];
 
 	// JOUEUR
