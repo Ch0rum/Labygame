@@ -261,7 +261,7 @@ int main(void)
 	// NIVEAU
 	Level levels[] = {level1, level2};
 	int levelCount = sizeof(levels) / sizeof(levels[0]);
-	int currentLevelIndex = 1;
+	int currentLevelIndex = 0;
 	Level *currentLevel = &levels[currentLevelIndex];
 
 	// JOUEUR
