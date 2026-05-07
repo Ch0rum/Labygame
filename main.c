@@ -1,5 +1,7 @@
 #include "raylib.h"
 #include <stdbool.h>
+#define SCREEN_WIDTH 1200
+#define SCREEN_HEIGHT 800
 
 // ENNEMIS
 typedef struct Enemy {
@@ -30,31 +32,36 @@ typedef struct Level {
 // PROPRIETES DES MURS DE NIVEAU 1
 Rectangle level1walls[] = {
 	{0, 400, 175, 10},
-	{250, 400, 10, 200},
-	{60, 100, 740, 10},
+	{250, 200, 10, 600},
+	{60, 100, 1340, 10},
 	{60, 100, 10, 250},
-	{250, 160, 10, 240}
 };
 
 // PROPRIETES DES MURS DE NIVEAU 2
 Rectangle level2walls[] = {
 	{85, 0, 10, 550},
 	{145, 0, 10, 550},
-	{205, 50, 10, 550}
+	{205, 50, 10, 550},
+	{205, 50, 525, 10},
+	{730, 50, 10, 450},
+	{340, 500, 400, 10},
+	{340, 200, 10, 300},
+	{340, 200, 300, 10},
+	{540, 200, 10, 150},
+
 };
 
 // PROPRIETES DES ENNEMIS DE NIVEAU 1
 Enemy level1Enemies[] = {
 	//startx, starty,   X,      Y,    size,   startspeed,  speed      movesOnX
-	{300.0f, 530.0f, 300.0f, 530.0f, 20.0f,     200.0f,    200.0f,     true},
-	{100.0f, 200.0f, 100.0f, 200.0f, 20.0f,     150.0f,    150.0f,     false}
+	{110.0f, 200.0f, 110.0f, 200.0f, 20.0f,     150.0f,    150.0f,     false}
 };
 
 // PROPRIETES DES ENNEMIS DE NIVEAU 2
 Enemy level2Enemies[] = {
-	//startx, starty,   X,      Y,    size,   startspeed,  speed      movesOnX
-	{200.0f, 230.0f, 200.0f, 230.0f, 20.0f,     300.0f,    300.0f,     false},
-	{100.0f, 200.0f, 100.0f, 200.0f, 20.0f,     250.0f,    250.0f,     false}
+	{300.0f, 100.0f, 300.0f, 100.0f, 20.0f,     300.0f,    300.0f,     true},
+	{110.0f, 200.0f, 110.0f, 200.0f, 20.0f,     200.0f,    200.0f,     false},
+	{20.0f, 400.0f, 20.0f, 400.0f, 20.0f,     300.0f,    300.0f,     true},
 };
 
 // PROPRIETES DU NIVEAU 1
@@ -62,7 +69,7 @@ Level level1 = {
 	740.0f,                     // PlayerStartX
 	40.0f,                      // PlayerStartY
 	{100, 500, 40, 40},         // exitRect
-	{750, 550, 30, 9},	    // keyRect
+	{700, 400, 30, 9},	    // keyRect
 	{175, 400, 75, 10},	    // doorRect
 	level1walls,
 	sizeof(level1walls) / sizeof(level1walls[0]),
@@ -75,7 +82,7 @@ Level level2 = {
 	40.0f,
 	30.0f,
 	{100, 30, 40, 40},
-	{700, 500, 30, 9},
+	{420, 280, 30, 9},
 	{95, 70, 50, 10},
 	level2walls,
 	sizeof(level2walls) / sizeof(level2walls[0]),
@@ -221,23 +228,16 @@ bool movePlayer(float *playerX, float *playerY, float playerSpeed, float deltaTi
 
 
 
-void drawHUD(bool win, int wallCount, float timer, float bestTime)
+void drawHUD(float timer, float bestTime)
 {
-	DrawText("Fleches : bouger", 50, 50, 10, BLACK);
-	DrawText("R : recommencer", 50, 70, 10, BLACK);
-	DrawText(TextFormat("Murs : %i", wallCount),  50, 90, 10, BLACK);
-	DrawText(TextFormat("Temps : %.2f", timer),  50, 110, 10, BLACK);
-	if (win)
-	{
-		DrawText("Victoire", 300, 250, 30, BLACK);
-	}
+	DrawText(TextFormat("Temps : %.2fs", timer),  10, 20, 10, BLACK);
 	if (bestTime < 0.0f)
 	{
-		DrawText("Pas encore de meilleur temps", 50, 130, 10, BLACK);
+		DrawText("Pas encore de meilleur temps", 10, 40, 10, BLACK);
 	}
 	else
 	{	
-		DrawText(TextFormat("Meilleur temps : %.2f", bestTime), 50, 130, 10, BLACK);
+		DrawText(TextFormat("Meilleur temps : %.2f", bestTime), 10, 40, 10, BLACK);
 	}
 }
 
@@ -256,6 +256,16 @@ void restartLevel(float *playerX, float *playerY, float playerStartX, float play
 	*hasKey = false;
 }
 
+void resetEnemies(Enemy enemies[], int enemyCount)
+{
+	for (int i = 0; i < enemyCount; i++)
+	{
+		enemies[i].x = enemies[i].startX;
+		enemies[i].y = enemies[i].startY;
+		enemies[i].speed = enemies[i].startSpeed;
+	}
+}
+
 int main(void)
 {
 	// NIVEAU
@@ -263,6 +273,9 @@ int main(void)
 	int levelCount = sizeof(levels) / sizeof(levels[0]);
 	int currentLevelIndex = 0;
 	Level *currentLevel = &levels[currentLevelIndex];
+
+	// SELECTION DU NIVEAU
+	int selectedLevelIndex = 0;
 
 	// JOUEUR
 	float playerStartX;
@@ -279,7 +292,7 @@ int main(void)
 	float timer = 0.0f;
 	float bestTime = -1.0f;
 
-	// NIVEAU 1
+	// MURS
 	Rectangle *walls;
 	int wallCount;
 
@@ -301,7 +314,7 @@ int main(void)
 	float playerX = playerStartX;
 	float playerY = playerStartY;
 
-	InitWindow(800, 600, "Mon premier jeu");
+	InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Mon premier jeu");
 	SetTargetFPS(60);
 	while (!WindowShouldClose())
 	{
@@ -310,18 +323,77 @@ int main(void)
 		// ECRAN TITRE
 		if (currentScreen == TITLE)
 		{
+			if (IsKeyPressed(KEY_UP))
+			{
+				if (selectedLevelIndex > 0)
+				{
+					selectedLevelIndex--;
+				}
+			}
+
+			if (IsKeyPressed(KEY_DOWN))
+			{
+				if (selectedLevelIndex < levelCount - 1)
+				{
+					selectedLevelIndex++;
+				}
+			}
+
 			if (IsKeyPressed(KEY_ENTER))
 			{
+				currentLevelIndex = selectedLevelIndex;
+				currentLevel = &levels[currentLevelIndex];
+
+				loadLevel(currentLevel,
+						&playerStartX,
+						&playerStartY,
+						&exitRect,
+						&wallCount,
+						&walls,
+						&keyRect,
+						&doorRect,
+						&enemies,
+						&enemyCount);
+
+				playerX = playerStartX;
+				playerY = playerStartY;
+				win = false;
+				timer = 0.0f;
+				hasKey = false;
+				resetEnemies(enemies, enemyCount);
 				currentScreen = PLAYING;
 				continue;
 			}
+
 			BeginDrawing();
 			ClearBackground(RAYWHITE);
-			DrawText("MON PREMIER JEU", 250, 220, 30, BLACK);
-			DrawText("Appuie sur ENTREE pour jouer", 220, 280, 20, DARKGRAY);
+			DrawText("SYWO", 530, 40, 50, BLACK);
+			DrawText("Fleches : Déplacements", 20, 20, 15, BLACK);
+			DrawText("Entrée : Sélection du niveau", 20, 40, 15, BLACK);
+			DrawText("R : Recommencer le niveau", 20, 60, 15, BLACK);
+			DrawText("M : Retour au menu", 20, 80, 15, BLACK);
+
+			for (int i = 0; i < levelCount; i++)
+			{
+				if (i == selectedLevelIndex)
+				{
+					DrawText(TextFormat("> Niveau %i", i + 1), 450, 150 + i * 30, 25, BLACK);
+				}
+				else
+				{
+					DrawText(TextFormat("  Niveau %i", i + 1), 450, 150 + i * 30, 25, DARKGRAY);
+				}
+			}
+
 			EndDrawing();
 			continue;
 		}
+		if (currentScreen != TITLE && IsKeyPressed(KEY_M))
+		{
+			selectedLevelIndex = currentLevelIndex;
+			currentScreen = TITLE;
+			continue;
+		}		
 
 		// ECRAN DE JEU
 		if (currentScreen == PLAYING)
@@ -332,12 +404,7 @@ int main(void)
 		if (currentScreen == PLAYING && IsKeyPressed(KEY_R))
 		{
 			restartLevel(&playerX, &playerY, playerStartX, playerStartY, &win, &timer, &hasKey);
-			for (int i = 0; i < enemyCount; i++)
-			{
-				enemies[i].x = enemies[i].startX;
-				enemies[i].y = enemies[i].startY;
-				enemies[i].speed = enemies[i].startSpeed;
-			}
+			resetEnemies(enemies, enemyCount);
 			blocked = false;
 		}
 
@@ -367,28 +434,42 @@ int main(void)
 					win = false;
 					timer = 0.0f;
 					hasKey = false;
+					resetEnemies(enemies, enemyCount);
 					currentScreen = PLAYING;
 					continue;
 				}
 			}
+
 			if (IsKeyPressed(KEY_R))
 			{
 				restartLevel(&playerX, &playerY, playerStartX, playerStartY, &win, &timer, &hasKey);
 
-				for (int i = 0; i < enemyCount; i++)
-				{
-					enemies[i].x = enemies[i].startX;
-					enemies[i].y = enemies[i].startY;
-					enemies[i].speed = enemies[i].startSpeed;
-				}
+				resetEnemies(enemies, enemyCount);
 				currentScreen = PLAYING;
 				continue;
 			}
+
+			if (IsKeyPressed(KEY_M))
+			{
+				selectedLevelIndex = currentLevelIndex;
+				currentScreen = TITLE;
+				continue;
+			}
+
 			BeginDrawing();
 			ClearBackground(RAYWHITE);
-			DrawText("VICTOIRE !", 300, 220, 30, BLACK);
-			DrawText(TextFormat("Temps : %.2f", timer), 300, 270, 20, DARKGRAY);
-			DrawText("Appuie sur R pour rejouer", 240, 320, 20, DARKGRAY);
+			DrawText("VICTOIRE !", 480, 250, 40, BLACK);
+			DrawText(TextFormat("Temps : %.2fs", timer), 510, 290, 25, RED);
+			if (currentLevelIndex + 1 < levelCount)
+			{
+				DrawText("ENTREE : Niveau suivant", 460, 350, 25, DARKGRAY);
+			}
+			else
+			{
+				DrawText("Dernier niveau termine", 460, 350, 25, DARKGRAY);
+			}
+			DrawText("R : Recommencer le niveau", 460, 380, 25, DARKGRAY);
+			DrawText("M : Retour au menu", 460, 410, 25, DARKGRAY);
 			EndDrawing();
 			continue;
 		}
@@ -398,25 +479,28 @@ int main(void)
 		{
 			if (IsKeyPressed(KEY_R))
 			{
-				restartLevel(&playerX, &playerY, playerStartX, playerStartY, &win, 										&timer, &hasKey);
+				restartLevel(&playerX, &playerY, playerStartX, playerStartY, &win, &timer, &hasKey);
 
-				for (int i = 0; i < enemyCount; i++)
-				{
-					enemies[i].x = enemies[i].startX;
-					enemies[i].y = enemies[i].startY;
-					enemies[i].speed = enemies[i].startSpeed;
-				}
+				resetEnemies(enemies, enemyCount);
 				currentScreen = PLAYING;
 				continue;
 			}
+
+			if (IsKeyPressed(KEY_M))
+			{
+				selectedLevelIndex = currentLevelIndex;
+				currentScreen = TITLE;
+				continue;
+			}
+
 			BeginDrawing();
 			ClearBackground(RAYWHITE);
-			DrawText("DEFAITE !", 300, 220, 30, BLACK);
-			DrawText("Appuie sur R pour rejouer", 240, 320, 20, DARKGRAY);
+			DrawText("DEFAITE !", 480, 250, 40, BLACK);
+			DrawText("R : Recommencer le niveau", 460, 320, 25, DARKGRAY);
+			DrawText("M : Retour au menu", 460, 355, 25, DARKGRAY);
 			EndDrawing();
 			continue;
 		}
-
 		// LIMITE DE DEPLACEMENT DU JOUEUR A 800x600
 		if (playerX < 0)
 		{
@@ -426,13 +510,13 @@ int main(void)
 		{
 			playerY = 0;
 		}
-		if (playerX > 800 - playerSize)
+		if (playerX > SCREEN_WIDTH - playerSize)
 		{
-			playerX = 800 - playerSize;
+			playerX = SCREEN_WIDTH - playerSize;
 		}
-		if (playerY > 600 - playerSize)
+		if (playerY > SCREEN_HEIGHT - playerSize)
 		{
-			playerY = 600 - playerSize;
+			playerY = SCREEN_HEIGHT - playerSize;
 		}
 
 		Rectangle playerRect = {playerX, playerY, playerSize, playerSize};
@@ -450,9 +534,9 @@ int main(void)
 					enemies[i].speed = -enemies[i].speed;
 				}
 
-				if (enemies[i].x > 800 - enemies[i].size)
+				if (enemies[i].x > SCREEN_WIDTH - enemies[i].size)
 				{
-					enemies[i].x = 800 - enemies[i].size;
+					enemies[i].x = SCREEN_WIDTH - enemies[i].size;
 					enemies[i].speed = -enemies[i].speed;
 				}
 			}
@@ -466,9 +550,9 @@ int main(void)
 					enemies[i].speed = -enemies[i].speed;
 				}
 
-				if (enemies[i].y > 600 - enemies[i].size)
+				if (enemies[i].y > SCREEN_HEIGHT - enemies[i].size)
 				{
-					enemies[i].y = 600 - enemies[i].size;
+					enemies[i].y = SCREEN_HEIGHT - enemies[i].size;
 					enemies[i].speed = -enemies[i].speed;
 				}
 			}
@@ -488,13 +572,7 @@ int main(void)
 		// COLLISION ENNEMI/JOUEUR
 		if (hitEnemy)
 		{
-			for (int i = 0; i < enemyCount; i++)
-			{
-				enemies[i].x = enemies[i].startX;
-				enemies[i].y = enemies[i].startY;
-				enemies[i].speed = enemies[i].startSpeed;
-			}
-			playerRect = (Rectangle){playerX, playerY, playerSize, playerSize};
+			resetEnemies(enemies, enemyCount);
 			currentScreen = GAMEOVER;
 		}
 
@@ -541,7 +619,7 @@ int main(void)
 		}
 		DrawRectangleRec(exitRect, YELLOW);
 		DrawRectangleRec(playerRect, playerColor);
-		drawHUD(win, wallCount, timer, bestTime);
+		drawHUD(timer, bestTime);
 
 		if (!hasKey)
 		{
